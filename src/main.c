@@ -70,16 +70,24 @@ int main(void)
 		getchar();
 		return EXIT_FAILURE;
 	}
-	if (!CheckDependencies())
-	{
-		ReaderClose();
-		getchar();
-		return EXIT_FAILURE;
-	}
+
 	status = ReaderReset();
 	if (status != UFR_OK)
 	{
 		printf("Error while opening device, status is: 0x%08X\n", status);
+		getchar();
+		return EXIT_FAILURE;
+	}
+
+#if __WIN32 || __WIN64
+	Sleep(500);
+#else // if linux || __linux__ || __APPLE__
+	usleep(500000);
+#endif
+
+	if (!CheckDependencies())
+	{
+		ReaderClose();
 		getchar();
 		return EXIT_FAILURE;
 	}
@@ -165,10 +173,6 @@ void menu(char key)
 			Operation2();
 			break;
 
-		case '3':
-			Operation3();
-			break;
-
 		case '\x1b':
 			break;
 
@@ -181,14 +185,13 @@ void menu(char key)
 void usage(void)
 {
 		printf(" +------------------------------------------------+\n"
-			   " |              Application title                 |\n"
+			   " |  uFR RF analog registers setting               |\n"
 			   " |                 version "APP_VERSION"                    |\n"
 			   " +------------------------------------------------+\n"
 			   "                              For exit, hit escape.\n");
 		printf(" --------------------------------------------------\n");
-		printf("  (1) - Option 1\n"
-			   "  (2) - Option 2\n"
-			   "  (3) - Option 3\n");
+		printf("  (1) - Set maximal RF receiver gain\n"
+			   "  (2) - Set default RF analog registers setting\n");
 }
 //------------------------------------------------------------------------------
 UFR_STATUS NewCardInField(uint8_t sak, uint8_t *uid, uint8_t uid_size)
@@ -210,15 +213,32 @@ UFR_STATUS NewCardInField(uint8_t sak, uint8_t *uid, uint8_t uid_size)
 //------------------------------------------------------------------------------
 void Operation1(void)
 {
+	UFR_STATUS status;
+
 	printf(" -------------------------------------------------------------------\n");
-	printf("                           Operation 1                              \n");
+	printf("              Set maximal gain of RF receiver                       \n");
+
+
+	status = SetRfAnalogRegistersTypeA(8, 7, 0, 7, 9);
+	if(status == UFR_OK)
+		printf("            Operation is OK              \n");
+	else
+		printf(" 			Operation failed             \n");
 	printf(" -------------------------------------------------------------------\n");
 }
 //------------------------------------------------------------------------------
 void Operation2(void)
 {
+	UFR_STATUS status;
+
 	printf(" -------------------------------------------------------------------\n");
-	printf("                           Operation 2                              \n");
+	printf("            Set default RF analog registers setting                 \n");
+
+	status = SetRfAnalogRegistersTypeADefault();
+	if(status == UFR_OK)
+		printf("            Operation is OK              \n");
+	else
+		printf(" 			Operation failed             \n");
 	printf(" -------------------------------------------------------------------\n");
 }
 //------------------------------------------------------------------------------
